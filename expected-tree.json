@@ -1,0 +1,147 @@
+{
+  "schema_version": "1.0",
+  "pm": "bun",
+  "pm_version_tested": "1.2.0",
+  "source_file": "bun.lock",
+  "generated_at": "2026-05-15T00:00:00+00:00",
+  "root": {
+    "name": "bun-optional-platform-probe",
+    "version": "0.1.0",
+    "dependencies": [
+      "esbuild",
+      "@esbuild/linux-x64",
+      "@esbuild/darwin-arm64",
+      "@esbuild/darwin-x64",
+      "@esbuild/win32-x64"
+    ]
+  },
+  "packages": {
+    "esbuild": {
+      "version": "0.19.12",
+      "source": "registry",
+      "group": "main",
+      "optional": false,
+      "dependencies": [
+        "@esbuild/linux-x64",
+        "@esbuild/darwin-arm64",
+        "@esbuild/darwin-x64",
+        "@esbuild/win32-x64"
+      ],
+      "source_detail": {
+        "registry": "https://registry.npmjs.org"
+      }
+    },
+    "@esbuild/linux-x64": {
+      "version": "0.19.12",
+      "source": "registry",
+      "group": "main",
+      "optional": true,
+      "dependencies": [],
+      "source_detail": {
+        "registry": "https://registry.npmjs.org",
+        "marker": {
+          "os": ["linux"],
+          "cpu": ["x64"]
+        }
+      }
+    },
+    "@esbuild/darwin-arm64": {
+      "version": "0.19.12",
+      "source": "registry",
+      "group": "main",
+      "optional": true,
+      "dependencies": [],
+      "source_detail": {
+        "registry": "https://registry.npmjs.org",
+        "marker": {
+          "os": ["darwin"],
+          "cpu": ["arm64"]
+        }
+      }
+    },
+    "@esbuild/darwin-x64": {
+      "version": "0.19.12",
+      "source": "registry",
+      "group": "main",
+      "optional": true,
+      "dependencies": [],
+      "source_detail": {
+        "registry": "https://registry.npmjs.org",
+        "marker": {
+          "os": ["darwin"],
+          "cpu": ["x64"]
+        }
+      }
+    },
+    "@esbuild/win32-x64": {
+      "version": "0.19.12",
+      "source": "registry",
+      "group": "main",
+      "optional": true,
+      "dependencies": [],
+      "source_detail": {
+        "registry": "https://registry.npmjs.org",
+        "marker": {
+          "os": ["win32"],
+          "cpu": ["x64"]
+        }
+      }
+    }
+  },
+  "project_metadata": {
+    "source_file": "bun.lock",
+    "groups": [
+      "main"
+    ]
+  },
+  "mend_expected_behavior": {
+    "platform_variant_detection": {
+      "@esbuild/linux-x64": {
+        "manifest_field": "optionalDependencies",
+        "expected_group": "main",
+        "expected_optional": true,
+        "os": ["linux"],
+        "cpu": ["x64"],
+        "note": "Most common CI/scanner host platform. Even when this is the installed variant, all other variants MUST also be reported."
+      },
+      "@esbuild/darwin-arm64": {
+        "manifest_field": "optionalDependencies",
+        "expected_group": "main",
+        "expected_optional": true,
+        "os": ["darwin"],
+        "cpu": ["arm64"],
+        "note": "macOS Apple Silicon. Will NOT be installed on Linux/Windows scan hosts."
+      },
+      "@esbuild/darwin-x64": {
+        "manifest_field": "optionalDependencies",
+        "expected_group": "main",
+        "expected_optional": true,
+        "os": ["darwin"],
+        "cpu": ["x64"],
+        "note": "macOS Intel. Will NOT be installed on Linux/Windows scan hosts."
+      },
+      "@esbuild/win32-x64": {
+        "manifest_field": "optionalDependencies",
+        "expected_group": "main",
+        "expected_optional": true,
+        "os": ["win32"],
+        "cpu": ["x64"],
+        "note": "Windows amd64. Will NOT be installed on Linux/macOS scan hosts."
+      }
+    },
+    "known_failure_modes": [
+      "Mend reports only the scan-host-matching variant (e.g. @esbuild/linux-x64 on a Linux runner) and silently drops the other three — the most common failure mode for platform-conditional optional deps.",
+      "Mend drops ALL four platform variants because optional deps whose os/cpu do not match the scan host are treated as 'not installed' and excluded from the tree.",
+      "Mend reports platform variants without optional: true — the optional flag is dropped because the resolver copies the lockfile 'packages' entry without reading the manifest's optionalDependencies field.",
+      "Mend treats @esbuild/darwin-arm64 etc. as scoped packages and strips the @esbuild/ prefix, producing artifactId 'darwin-arm64' instead of '@esbuild/darwin-arm64'.",
+      "Mend's npm-fallback JSONC parser fails to read bun.lock (comments or trailing commas trigger a parse error), producing an empty tree."
+    ]
+  },
+  "warnings": [
+    "CRITICAL: ALL four platform variants (@esbuild/linux-x64, @esbuild/darwin-arm64, @esbuild/darwin-x64, @esbuild/win32-x64) MUST appear in Mend's output tree regardless of which OS the scanner runs on. If only the scan-host-matching variant is reported, Mend has dropped the others — this is a false negative. The lockfile records all variants statically; a lockfile-driven parser must emit all of them.",
+    "Bun is NOT a UA-supported resolver. Mend will attempt npm-resolver fallback against bun.lock. JSONC comments and trailing commas in bun.lock may cause parse failures depending on Mend UA version.",
+    "Each platform variant carries os/cpu metadata in the bun.lock entry. These fields are preserved in source_detail.marker in this expected tree. If Mend's output omits these fields, that is a metadata-loss failure (lower severity than missing the dep entirely).",
+    "The optional: true flag on each platform variant is the primary correctness signal for the optional-platform-deps pattern. If a variant appears in the tree WITHOUT optional: true, the pattern fails.",
+    "esbuild@0.19.12 itself (group: main, optional: false) is the non-optional direct dep that drives the platform-binary lookup. It must appear in the tree separately from its optional platform children."
+  ]
+}
